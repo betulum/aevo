@@ -17,6 +17,7 @@ struct signalData {
 	struct mev_async **wasync;
 };
 
+int start_timer(int period_ms, int sig);
 void send_term(struct ev_loop *loop, struct signalData *sdata);
 void sigint_cb(struct ev_loop *loop, struct ev_signal *watcher, int revents);
 void sigterm_cb(struct ev_loop *loop, struct ev_signal *watcher, int revents);
