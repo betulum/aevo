@@ -9,6 +9,7 @@
 #include<sys/types.h>
 #include<fcntl.h>
 #include"arg.h"
+#include"sig.h"
 #include"worker.h"
 
 void ok(int sock, int size) {
@@ -42,7 +43,7 @@ void nofile(int sock, const char *path) {
 void senddata(const char *path, int sock) {
 	char rpath[256];
 	sprintf(rpath, ".%s", path);
-	char *idx = index(rpath, '?');
+	char *idx = strchr(rpath, '?');
 	if (idx != NULL)
 		*idx='\0';
 
@@ -94,9 +95,17 @@ void accept_cb(struct ev_loop *loop, struct ev_io *watcher, int revents)
 	ev_io_start(loop, w_client);
 }
 
-void exit_cb(struct ev_loop *loop, struct ev_async *watcher, int revents)
+void async_cb(struct ev_loop *loop, struct ev_async *watcher, int revents)
 {
-	ev_break(loop, EVBREAK_ALL);
+	struct mev_async *async_data = (struct mev_async *)watcher;
+	switch (async_data->request) {
+	case 0:
+		ev_break(loop, EVBREAK_ALL);
+		break;
+	case 1:
+		// send data
+		break;
+	}
 }
 
 void *worker_function(void *arg) 
@@ -118,7 +127,7 @@ void *worker_function(void *arg)
 	ev_io_start(loop, &w_accept);
 	
 	//struct ev_async w_exit;
-	ev_async_init(tdata->async_watcher, exit_cb);
+	ev_async_init(tdata->async_watcher, async_cb);
 	ev_async_start(loop, tdata->async_watcher);
 	
 	ev_loop(loop, 0);
